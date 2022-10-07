@@ -1,0 +1,61 @@
+---
+
+- hosts: localhost
+  become: yes
+  vars_files:
+    - ./variable.yml
+  tasks:
+    - name: Create WAF IP Condition
+      aws_waf_condition:
+        name: "{{ condition_name }}"
+        filters:
+          - ip_address: "{{ ansible_wlp9s0.ipv4.address }}/32"
+        type: ip
+      register: waf_condition
+
+    - debug:
+            var: waf_condition
+
+    - name: Create WAF rule
+      aws_waf_rule:
+        name: "{{ rule_name }}"
+        conditions:
+          - name: "{{ condition_name }}"
+            type: ip
+            negated: no
+      register: waf_rule
+
+    - debug:
+           var: waf_rule
+
+    - name: Create Web ACL
+      aws_waf_web_acl:
+        name: "{{ acl_name }}"
+        rules:
+          - name: "{{ rule_name }}"
+            priority: 1
+            action: allow
+        default_action: block
+        purge_rules: yes
+        state: present 
+      register: acl_result
+
+    - debug: 
+            var: acl_result  
+
+    - name: Record Web ACL Id
+      copy:
+        content: "{{ acl_result.web_acl.web_acl_id }}"
+        dest: "./acl_id"
+      register: web_id
+    
+    - debug: 
+            var: web_id
+
+    - name: prepare json config for cdn
+      lineinfile: dest=config_admin.json regexp=^{{ "  " }}"WebACLId"{{ ":" }}
+                  line="{{ "  " }}"WebACLId"{{ ":" }} "{{ acl_result.web_acl.web_acl_id }}"{{ "," }}"
+      register: cdn_id
+   
+    - debug:
+            var: cdn_id

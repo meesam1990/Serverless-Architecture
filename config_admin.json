@@ -1,0 +1,68 @@
+{
+  "CallerReference": "abc",
+  "Aliases": {
+    "Quantity": 0
+  },
+  "DefaultRootObject": "",
+  "PriceClass": "PriceClass_All",
+  "Enabled": false,
+  "Origins": {
+    "Quantity": 1,
+    "Items": [
+      {
+        "S3OriginConfig": {
+          "OriginAccessIdentity": ""
+          },
+        "Id": "S3-admin-section",
+        "DomainName": "admin-section.s3.amazonaws.com"
+      }
+    ]
+  },
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "S3-admin-section",
+    "ForwardedValues": {
+      "QueryString": false,
+      "Cookies": {
+        "Forward": "none",
+        "WhitelistedNames": {
+          "Quantity": 0
+        }
+      },
+      "Headers": {
+        "Quantity": 0
+      }
+    },
+    "TrustedSigners": {
+      "Enabled": false,
+      "Quantity": 0
+    },
+    "ViewerProtocolPolicy": "allow-all",
+    "MinTTL": 0,
+    "AllowedMethods": {
+      "Quantity": 2,
+      "Items": ["GET","HEAD"],
+      "CachedMethods": {
+        "Quantity": 2,
+        "Items": ["GET","HEAD"]
+      }
+    }
+  },
+  "ViewerCertificate": {
+      "CloudFrontDefaultCertificate": true
+  },
+  "CustomErrorResponses": {
+      "Quantity": 0
+  },
+  "Restrictions": {
+      "GeoRestriction": {
+          "RestrictionType": "none",
+          "Quantity": 0,
+          "Items": []
+      }
+  },
+  "WebACLId": "84b2be24-9eea-416d-a239-cae199732cd8",
+  "HttpVersion": "http1.1",
+  "IsIPV6Enabled": false,
+  "Comment": "firewall protected cdn for admin panel",
+  "Enabled": true
+}

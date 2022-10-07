@@ -1,0 +1,77 @@
+---
+
+- hosts: localhost
+  become: yes
+  ignore_errors: yes
+  vars_files:
+    - ./variable.yml
+  tasks:
+
+    - name: Copy lambda built code to s3
+      tags: lambda
+      command: aws s3 cp "{{ zip_file }}" s3://"{{ lambda_bucket }}"
+      register: built_code
+
+    - debug:
+            var: built_code
+  
+    - name: create bucket to store admin section code
+      tags: bucket
+      s3_bucket:
+        name: "{{ admin_bucket }}"
+        region: "{{ aws_region }}"
+        state: present
+      register: admin_code
+
+    - debug: 
+            var: admin_code
+
+    - name: Sync admin section code to s3 bucket
+      tags: bucket
+      command: aws s3 sync admin s3://"{{ admin_bucket }}"
+#      s3_sync:
+#        bucket: "{{ admin_bucket }}"
+#        file_root: admin
+      register: admin_sync
+
+    - debug: 
+            var: admin_sync
+
+    - name: create bucket to store recruiter section code
+      tags: bucket
+      s3_bucket:
+        name: "{{ recruiter_section }}"
+        region: "{{ aws_region }}"
+        state: present
+      register: recruiter_code
+
+    - debug: 
+            var: recruiter_code
+            
+    - name: Sync recruiter section code to s3 bucket
+      tags: bucket
+      command: aws s3 sync recruiter s3://"{{ recruiter_section }}"
+#      s3_sync:
+#        bucket: "{{ recruiter_section }}"
+#        file_root: recruiter
+      register: recruiter_sync
+
+    - debug: 
+            var: recruiter_sync
+
+    - name: create distribution for admin panel
+      tags: admin
+      command: aws cloudfront create-distribution --distribution-config file://"{{ file }}"
+      register: admin_variable
+
+    - debug:
+           var: admin_variable
+
+    - name: create distribution for recruiter panel
+      tags: recruiter
+      command: aws cloudfront create-distribution --origin-domain-name "{{ origin_domain }}"
+      register: recruiter_variable
+
+    - debug:
+           var: recruiter_variable
+

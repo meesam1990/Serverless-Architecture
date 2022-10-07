@@ -1,0 +1,5 @@
+---
+
+- import_playbook: lambda.yml
+- import_playbook: waf.yml
+- import_playbook: cdn.yml

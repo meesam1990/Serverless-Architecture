@@ -1,0 +1,60 @@
+---
+
+- hosts: localhost
+  become: yes
+  vars_files:
+     - ./variable.yml
+  tasks:
+
+    - name: deploy lambda function
+      lambda:
+        name: "{{ lambda_name }}"
+        state: present
+        zip_file: "{{ zip_file }}"
+        runtime: "{{ lambda_runtime }}"
+        role: "{{ lamda_role }}"
+        handler: "{{ handler }}"
+        region: "{{ aws_region }}"
+      register: lambda_result
+
+    - debug:
+            var: lambda_result
+
+    - name: Record lambda arn
+      copy:
+        content: "{{ lambda_result.configuration.function_arn }}" 
+        dest: "lambda_arn"
+
+    - name: lambda execution permissions
+      local_action:
+        module: lambda_policy
+        function_name: "{{ lambda_name }}"
+        region: "{{ aws_region }}"
+        state: present
+        statement_id: "{{ statement }}"
+        action: "{{ action }}"
+        principal: "{{ principal }}"
+        source_arn: "{{ source_arn }}"
+
+    - name: deploy API Gateway
+      tags: deploy
+      aws_api_gateway:
+        state: present
+        region: "{{ aws_region }}"
+        swagger_file: swagger.yml
+        stage: test
+        deploy_desc: test deployment
+      register: api_result
+ 
+    - debug: 
+            var: api_result
+
+    - name: test api gateway endpoint
+      uri:
+        url: https://{{ api_result.api_id }}.execute-api.{{ aws_region }}.amazonaws.com/test
+        return_content: yes
+      register: webpage
+
+    - debug: 
+            var: webpage
+ 
